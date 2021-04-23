@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
+</head>
+<body>
+    <div>
+        <canvas id="myChart" width="900" height="400"></canvas>
+      </div>
+
+      <h1 id="app">Data</h1>
+
+      <script>
+        var ctx = document.getElementById('myChart').getContext('2d');
+        var graphData = {
+            type: 'line',
+            data: {
+                labels: [1,2,3,4,5,6],
+                datasets: [{
+                    label: 'Real time votes',
+                    data: [12, 19, 3, 5, 2, 3]
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        };
+
+        var myChart = new Chart(ctx, graphData);
+        </script>
+
+        <script>
+            // THIS IS THE CLIENT !!!!!!!!!!!!!!!!!!!!
+            var socket = new WebSocket('ws://127.0.0.1:8000/ws/some_url/');
+            
+            socket.onopen = function(event){
+                alert("Connection established");
+            }
+
+            socket.onmessage = function(event){
+                // get the incoming data
+                var djangoData = JSON.parse(event.data);
+                var newGraphData = graphData.data.datasets[0].data; //get the list
+                // get rid of the first element from newGraphData
+                newGraphData.shift();
+                // add to the last element of the list
+                newGraphData.push(djangoData.message);
+                // bring back the new list
+                graphData.data.datasets[0].data = newGraphData;
+                myChart.update(); // in Hicharts e chart.redraw();
+
+                document.querySelector('#app').innerText = djangoData.message;
+            }
+
+            socket.onclose = function(event){
+                alert('Connection Closed');
+            }
+
+        </script>
+      
+</body>
+</html>
